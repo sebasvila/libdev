@@ -1,12 +1,6 @@
 #ifndef _SHIELDITIC_H_
 #define _SHIELDITIC_H_
 
-#ifndef ShieldITIC
-#pragma GCC error "The shield iTIC is mandatory"
-#endif
-
-
-
 #include <stdbool.h>
 
 typedef enum {red, yellow, green} led_color;
