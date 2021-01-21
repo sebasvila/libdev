@@ -1,32 +1,51 @@
-#################################################################
+##### Configuration zone #############################################
 
+# library release
+RELEASE=1.0
+
+# user space local install root directory
+# assume libaire is installed here
+USRLOCALROOT=$(HOME)/.avrlocal
+
+# testing platform
 PLATFORM=ArduinoONE
+
+# device file to upload tests
 DEVICE=/dev/ttyACM0
 
-CC=avr-gcc
-CPPFLAGS=-I../../libaire/src
-CFLAGS=-Wall -std=gnu99 -Os -fshort-enums
-LDFLAGS=-L../../libaire/build -std=c99
-LDLIBS=-laire
-AR=avr-ar
+# private library headers (not needed by the library end user)
+PRIVATE_HEADERS =
 
-#################################################################
+# public library headers (required by the library end user)
+PUBLIC_HEADERS  = lcd.h motor.h shielditic.h rtc1307.h bcd.h
 
-SRC_LIB = libdev.a
+# library modules (object files in the library; file suffix not needed)
+SRC_MODS =  lcd motor shielditic rtc1307 bcd
 
-SRC_MODS = lcd motor shielditic rtc1307 bcd
-
+# library tests/examples
 SRC_TESTS = test_rtc1307_1
 
-# Library deps
-$(SRC_LIB): $(SRC_LIB)($(addsuffix .o, $(SRC_MODS)))
+# Link rules for tests/examples (may have specific platform requirements to run)
+# any test depends on libaire
+test_rtc1307_1: bcd.o rtc1307.o -laire
 
 
-# Link rules for tests
-test_rtc1307_1: bcd.o rtc1307.o
+##### Internal configs ##########################################
 
 
-#################################################################
+# processing tools and processing flags
+
+CC=avr-gcc
+CPPFLAGS=
+CFLAGS=-Wall -std=gnu99 -Os -fshort-enums
+LDFLAGS=-std=c99  # only to link examples
+AR=avr-ar
+STRIP=avr-strip
+
+# Non modificable names
+
+SRC_DIST=libdev-$(RELEASE)
+SRC_LIB = libdev.a
 
 
 # Platform and shield dependent parameters
@@ -44,12 +63,13 @@ else ifeq ($(PLATFORM),ArduinoMEGA)
 endif
 
 
-
 # Processing parameters
 
 CFLAGS   +=  -mmcu=$(MCU)
-LDFLAGS  +=  -mmcu=$(MCU)
-CPPFLAGS +=  -D$(PLATFORM) -DF_CPU=$(FREQ) -I$(SRCDIR)
+LDFLAGS  +=  -mmcu=$(MCU) 
+CPPFLAGS +=  -D$(PLATFORM) -DF_CPU=$(FREQ) \
+             -I$(SRCDIR) -I$(USRLOCALROOT)/include
+#LDLIBS   +=  -laire
 
 
 # Project structure
@@ -59,42 +79,74 @@ SRCDIR  = ../src
 TESTDIR = ../test
 BUILDDIR = .
 
-
 # Sets of files
 
 SOURCES = $(SRC_MODS) $(SRC_TESTS)
 DEPFILES = $(addprefix $(DEPSDIR)/, $(addsuffix .d, $(SOURCES)))
 
-# Search path
+# Search paths
 
 VPATH = $(SRCDIR):$(TESTDIR)
 
+# Library search
 
-# Default targets
+.LIBPATTERNS: lib%.a
+vpath %.a $(USRLOCALROOT)/lib
 
-.PHONY: lib tests
-lib:	$(SRC_LIB)
+
+##### Main targets #######################################################
+
+.PHONY: lib tests install dist clean veryclean
+
+.DEFAULT_GOAL := lib
+
+# Library
+
+$(SRC_LIB): $(SRC_LIB)($(addsuffix .o, $(SRC_MODS)))
+lib:	    $(SRC_LIB)
+
+# tests
+
 tests:  $(SRC_TESTS)
 
+# Package distribution
+
+$(SRC_DIST).tar.gz: $(SRC_LIB) $(PUBLIC_HEADERS)
+	install -D -m 444 --strip-program=$(STRIP) -s -t tmpdist/lib $(SRC_LIB)
+	for f in $(PUBLIC_HEADERS); \
+           do install -D -m 444  -t tmpdist/include $(SRCDIR)/$$f; \
+        done
+	tar zcf $(SRC_DIST).tar.gz -C tmpdist .
+	rm -rf tmpdist
+
+
+dist:   $(SRC_DIST).tar.gz
+
+# Install in user local space
+
+install: lib
+	install -D -m 444 --strip-program=$(STRIP) -s -t $(USRLOCALROOT)/lib $(SRC_LIB)
+	for f in $(PUBLIC_HEADERS); \
+           do install -D -m 444  -t $(USRLOCALROOT)/include $(SRCDIR)/$$f; \
+        done
 
 # Utility targets
 
-.PHONY: clean veryclean
 clean:
 	@\rm -f *~ *.o *.s *.hex
 
 veryclean: clean
-	@\rm -f  \#*\# $(SRC_LIB) $(SRC_TESTS)
+	@\rm -f  \#*\# $(SRC_LIB) $(SRC_TESTS) $(SRC_DIST).tar.gz
 	@\rm -rf $(DEPSDIR)
 
 
 
-# Generic rules
+##### Generic rules ########################################
 
 %.hex: %
 	avr-objcopy -Oihex  $< $@
 
-implanta_%: %.hex
+upload_%: %.hex
 	avrdude $(DUDEOPTS) -c $(PROGRAMMER) -p $(MCU) -P $(DEVICE) -U $<
 
 %.s: %.c
@@ -110,6 +162,6 @@ $(DEPSDIR):
 	 @mkdir -p $@
 
 
-# Automagic dependencies
+##### Automagic dependencies ###############################
 
 -include $(DEPFILES)
