@@ -195,9 +195,19 @@ void lcd_create_char(lcd_t *l, uint8_t location, uint8_t charmap[8]);
  */
 void lcd_move_cursor(lcd_t *l, const uint8_t col, const uint8_t row);
 
+/**
+ * @brief Prints a character to the LCD asyncronously
+ * 
+ * @param l Pointer to the LCD object
+ * @param ch The character to be printed
+ */
+void lcd_print_ch(lcd_t *l, const char ch);
 
 /**
- * @brief Sends a string to the LCD
+ * @brief Prints a string to the LCD
+ * The function will be blocking as soon as the i2c queue will be full.
+ * Better to use the `lcd_print_ch` in a prothothreads environment or
+ * increase the i2c queue array size.
  * @param l Pointer to the LCD object to send the string
  * @param string The string object to be sent
  */

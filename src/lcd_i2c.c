@@ -91,7 +91,7 @@ static void lcd_write_nibble(lcd_t *l, uint8_t nibble, volatile i2c_status_t * s
  * @param rs Message is a `COMMAND` or `DATA`
  * @param message The byte to be sent
  */
-static void lcd_send(lcd_t *l, const rs_mode_t rs, uint8_t message) {
+static void lcd_send(lcd_t *l, const rs_mode_t rs, const uint8_t message) {
   while(l->i2c_comm == Running);  //If LCD is still pending on the last i2c command, function will block.
   
   uint8_t nibble = (rs | LCD_BACKLIGHT_PIN) & 0x0F;
@@ -277,6 +277,9 @@ void lcd_move_cursor(lcd_t *l, uint8_t col, uint8_t row) {
   lcd_send(l, COMMAND, LCD_SETDDRAMADDR | (col + offsets[row]));
 }
 
+void lcd_print_ch(lcd_t *l, const char ch){
+  lcd_send(l, DATA, ch);
+}
 
 void lcd_print(lcd_t *l, char *string) {
   for (char *it = string; *it; it++) {
