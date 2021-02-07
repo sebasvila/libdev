@@ -19,8 +19,8 @@
 #define LCD_ENTRYMODESET   0x04 
   #define LCD_ENTRYRIGHT          0x00
   #define LCD_ENTRYLEFT           0x02
-  #define LCD_ENTRYSHIFTINCREMENT 0x01
-  #define LCD_ENTRYSHIFTDECREMENT 0x00  
+  #define LCD_AUTOSCROLL_ON       0x01
+  #define LCD_AUTOSCROLL_OFF      0x00  
 
 #define LCD_DISPLAYCONTROL 0x08
   #define LCD_DISPLAYON  0x04
@@ -160,16 +160,16 @@ void lcd_init(lcd_t *l){
   lcd_send(l, COMMAND, LCD_FUNCTIONSET | l->function);
 
 	//Turn the display on with no cursor or blinking default
-	l->params = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
+	l->params = LCD_DISPLAYOFF | LCD_CURSOROFF | LCD_BLINKOFF;
   lcd_send(l, COMMAND, LCD_DISPLAYCONTROL | l->params);
-
-	//Set the entry mode. Initialize to default text direction (for roman languages)
-	l->mode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
-	lcd_send(l, COMMAND, LCD_ENTRYMODESET | l->mode);
 
   lcd_clear(l, true);
 
-	lcd_return_home(l, true);
+	//Set the entry mode. Initialize to default text direction (for roman languages)
+	l->mode = LCD_ENTRYLEFT | LCD_AUTOSCROLL_OFF;
+	lcd_send(l, COMMAND, LCD_ENTRYMODESET | l->mode);
+
+  lcd_on(l);
 }
 
 
@@ -252,13 +252,13 @@ void lcd_set_right_to_left(lcd_t *l) {
 
 
 void lcd_enable_autoscroll(lcd_t *l) {
-  l->params |= LCD_ENTRYSHIFTINCREMENT;
+  l->params |= LCD_AUTOSCROLL_ON;
   lcd_send(l, COMMAND, LCD_ENTRYMODESET | l->params);
 }
 
 
 void lcd_disable_autoscroll(lcd_t *l) {
-  l->params &= ~LCD_ENTRYSHIFTINCREMENT;
+  l->params &= ~LCD_AUTOSCROLL_ON;
   lcd_send(l, COMMAND, LCD_ENTRYMODESET | l->params);
 }
 
