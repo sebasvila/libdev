@@ -17,10 +17,10 @@ DEVICE=/dev/ttyACM0
 PRIVATE_HEADERS =
 
 # public library headers (required by the library end user)
-PUBLIC_HEADERS  = lcd.h lcd_i2c.h motor.h shielditic.h rtc1307.h bcd.h
+PUBLIC_HEADERS  = lcd_i2c.h motor.h shielditic.h rtc1307.h bcd.h encoder.h
 
 # library modules (object files in the library; file suffix not needed)
-SRC_MODS =  lcd lcd_i2c motor shielditic rtc1307 bcd
+SRC_MODS =  lcd_i2c motor shielditic rtc1307 bcd encoder
 
 # library tests/examples
 SRC_TESTS = test_rtc1307_1
