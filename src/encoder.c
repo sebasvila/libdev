@@ -22,14 +22,13 @@ encoder_t enc_create(volatile uint8_t *port_pin_A, uint8_t pin_A, volatile uint8
 
 
 void enc_update_position(encoder_t *enc){
-    bool pin_A = pin_r(enc->pin_A); 
-    if ((pin_A == false) & (enc->pin_A_last == true)){  //Rising Edge detected
-        bool pin_B = pin_r(enc->pin_B); 
-        if (pin_A == pin_B){
-            enc->position = enc->position - 1;
-        } else {
-            enc->position = enc->position + 1;
-        }
+    bool pin_A = pin_r(enc->pin_A);
+    if (pin_A == false && pin_A != enc->pin_A_last){  //Falling Edge detected
+      if (pin_A == pin_r(enc->pin_B)){
+	enc->position--;
+      } else {
+	enc->position++;
+      }
     }
     enc->pin_A_last = pin_A;
 }
