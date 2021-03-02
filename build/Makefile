@@ -23,11 +23,12 @@ PUBLIC_HEADERS  = lcd_i2c.h motor.h shielditic.h rtc1307.h bcd.h encoder.h
 SRC_MODS =  lcd_i2c motor shielditic rtc1307 bcd encoder
 
 # library tests/examples
-SRC_TESTS = test_rtc1307_1
+SRC_TESTS = test_rtc1307_1 test_lcd_i2c
 
 # Link rules for tests/examples (may have specific platform requirements to run)
 # any test depends on libaire
 test_rtc1307_1: bcd.o rtc1307.o -laire
+test_lcd_i2c: lcd_i2c.o -laire
 
 
 ##### Internal configs ##########################################
@@ -147,7 +148,7 @@ veryclean: clean
 	avr-objcopy -Oihex  $< $@
 
 upload_%: %.hex
-	avrdude.exe $(DUDEOPTS) -c $(PROGRAMMER) -p $(MCU) -P $(DEVICE) -U $<
+	avrdude $(DUDEOPTS) -c $(PROGRAMMER) -p $(MCU) -P $(DEVICE) -U $<
 
 %.s: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -S $<
